@@ -1,0 +1,19 @@
+id: AD-UNCONSTRAINED-DELEG
+title: Objects trusted for unconstrained delegation
+severity: high
+category: active_directory
+description: >
+  A host with unconstrained delegation caches the Kerberos TGTs of any user
+  who authenticates to it. Compromising such a host lets an attacker
+  impersonate those users — including domain admins — across the domain.
+check:
+  fact: unconstrained_delegation
+  operator: non_empty
+recommendation: >
+  Replace unconstrained delegation with constrained or resource-based
+  constrained delegation. Mark privileged accounts as "sensitive and cannot
+  be delegated" and add them to the Protected Users group.
+references:
+  attack: ["T1558", "T1187"]
+  cis: ["18.x"]
+  stig: ["V-243487"]

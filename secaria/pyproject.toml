@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "secaria"
+version = "0.1.0"
+description = "Agentless security posture assessment, starting with Active Directory."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+dependencies = [
+  "PyYAML>=6.0",
+]
+
+[project.optional-dependencies]
+# Live collection extras. Offline evaluation (--facts) needs none of these.
+ad = ["ldap3>=2.9"]
+dev = ["pytest>=7.0"]
+
+[project.scripts]
+secaria = "secaria.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["secaria*"]
+
+[tool.setuptools.package-data]
+secaria = ["reporting/templates/*.html", "rules/**/*.yaml"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

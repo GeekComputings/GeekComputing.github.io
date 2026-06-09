@@ -1,0 +1,17 @@
+id: AD-PWD-HISTORY
+title: Password history remembers fewer than 24 passwords
+severity: low
+category: active_directory
+description: >
+  A short password history lets users cycle back to a previously used (and
+  possibly compromised) password, undermining forced rotations.
+check:
+  fact: password_policy.history
+  operator: lt
+  value: 24
+recommendation: >
+  Set "Enforce password history" to 24 in the default domain policy.
+references:
+  attack: ["T1110"]
+  cis: ["1.1.1"]
+  stig: ["V-243476"]

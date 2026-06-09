@@ -1,0 +1,19 @@
+id: AD-MACHINE-QUOTA
+title: Non-zero ms-DS-MachineAccountQuota
+severity: medium
+category: active_directory
+description: >
+  By default any authenticated user can join up to 10 computers to the domain.
+  Attacker-created machine accounts enable abuse such as resource-based
+  constrained delegation attacks (e.g. the noPac / sAMAccountName chains).
+check:
+  fact: machine_account_quota
+  operator: gt
+  value: 0
+recommendation: >
+  Set ms-DS-MachineAccountQuota to 0 and delegate machine-join rights to a
+  specific administrative group instead of all authenticated users.
+references:
+  attack: ["T1078", "T1098"]
+  cis: ["18.x"]
+  stig: ["V-243492"]

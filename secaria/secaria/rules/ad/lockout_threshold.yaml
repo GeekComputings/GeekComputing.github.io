@@ -1,0 +1,19 @@
+id: AD-PWD-LOCKOUT
+title: Account lockout threshold not set (unlimited attempts)
+severity: high
+category: active_directory
+description: >
+  A lockout threshold of 0 means accounts never lock, leaving online
+  brute-force and password-spraying attacks effectively unthrottled.
+check:
+  fact: password_policy.lockout_threshold
+  operator: eq
+  value: 0
+recommendation: >
+  Set an account lockout threshold (commonly 5–10 invalid attempts) with a
+  sensible observation/reset window so legitimate users are not unduly
+  affected while automated guessing is throttled.
+references:
+  attack: ["T1110.003"]
+  cis: ["1.2.2"]
+  stig: ["V-243484"]

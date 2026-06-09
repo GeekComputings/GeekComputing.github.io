@@ -1,0 +1,18 @@
+id: AD-PRIV-STALE
+title: Stale privileged accounts (inactive beyond threshold)
+severity: medium
+category: active_directory
+description: >
+  Privileged accounts that have not logged on for an extended period are
+  prime targets: they retain full rights but no one is watching them for
+  anomalous use.
+check:
+  fact: privileged_stale_accounts
+  operator: non_empty
+recommendation: >
+  Review each stale privileged account. Disable or remove those no longer
+  needed, and reduce standing privilege for the rest via just-in-time access.
+references:
+  attack: ["T1078.002"]
+  cis: ["5.3"]
+  stig: ["V-243490"]

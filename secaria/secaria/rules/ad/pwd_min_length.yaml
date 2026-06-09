@@ -1,0 +1,19 @@
+id: AD-PWD-MINLEN
+title: Domain minimum password length below 14
+severity: medium
+category: active_directory
+description: >
+  Short passwords fall quickly to offline cracking and password spraying.
+  A domain minimum length of at least 14 characters materially raises the
+  cost of both.
+check:
+  fact: password_policy.min_length
+  operator: lt
+  value: 14
+recommendation: >
+  Set the default domain policy minimum password length to 14 or greater.
+  Consider 15+ to defeat the LM hash boundary on legacy systems.
+references:
+  attack: ["T1110.003"]
+  cis: ["1.1.4"]
+  stig: ["V-243478"]

@@ -1,0 +1,18 @@
+id: AD-PRIV-NEVER-EXPIRES
+title: Privileged accounts with non-expiring passwords
+severity: high
+category: active_directory
+description: >
+  Domain Admin accounts whose passwords never expire accumulate long-lived
+  secrets that are more likely to be exposed, reused, or cracked offline.
+check:
+  fact: privileged_never_expires
+  operator: non_empty
+recommendation: >
+  Remove the "password never expires" flag from privileged accounts and bring
+  them under the domain password rotation policy, ideally with a PAM/tiered
+  admin model and frequent rotation.
+references:
+  attack: ["T1078.002", "T1098"]
+  cis: ["5.2"]
+  stig: ["V-243488"]

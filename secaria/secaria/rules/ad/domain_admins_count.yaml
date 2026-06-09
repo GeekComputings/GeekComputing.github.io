@@ -1,0 +1,19 @@
+id: AD-DA-COUNT
+title: Excessive Domain Admins membership
+severity: medium
+category: active_directory
+description: >
+  A large Domain Admins group expands the attack surface for the most
+  powerful role in the domain. Each member is a path to full compromise.
+check:
+  fact: domain_admins.count
+  operator: gt
+  value: 10
+recommendation: >
+  Reduce Domain Admins to the minimum set of break-glass accounts. Move
+  day-to-day administration to delegated, tiered roles and just-in-time
+  elevation.
+references:
+  attack: ["T1078.002"]
+  cis: ["5.4"]
+  stig: ["V-243491"]

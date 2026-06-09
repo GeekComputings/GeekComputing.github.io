@@ -1,0 +1,29 @@
+{
+  "domain": "corp.example.com",
+  "password_policy": {
+    "min_length": 8,
+    "history": 12,
+    "lockout_threshold": 0,
+    "complexity": true,
+    "reversible_encryption": false,
+    "max_age_days": 0
+  },
+  "krbtgt": {
+    "password_age_days": 940
+  },
+  "machine_account_quota": 10,
+  "domain_admins": {
+    "count": 17
+  },
+  "privileged_stale_accounts": [
+    "svc-backup-old",
+    "admin.jdoe"
+  ],
+  "unconstrained_delegation": [
+    "WEB01$"
+  ],
+  "privileged_never_expires": [
+    "Administrator",
+    "svc-sql"
+  ]
+}

@@ -1,0 +1,18 @@
+id: AD-REVERSIBLE-ENC
+title: Reversible password encryption enabled
+severity: critical
+category: active_directory
+description: >
+  Storing passwords with reversible encryption is equivalent to storing them
+  in cleartext: anyone who can read the directory database can recover the
+  plaintext passwords directly.
+check:
+  fact: password_policy.reversible_encryption
+  operator: is_true
+recommendation: >
+  Disable "Store passwords using reversible encryption" in the default domain
+  policy and force a password reset for any account that had it set.
+references:
+  attack: ["T1003"]
+  cis: ["1.1.6"]
+  stig: ["V-243482"]

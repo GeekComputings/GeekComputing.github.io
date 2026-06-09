@@ -1,0 +1,17 @@
+id: AD-PWD-COMPLEXITY
+title: Password complexity disabled
+severity: medium
+category: active_directory
+description: >
+  With complexity disabled, users may set trivially guessable passwords,
+  dramatically lowering the effort for password guessing and spraying.
+check:
+  fact: password_policy.complexity
+  operator: is_false
+recommendation: >
+  Enable "Password must meet complexity requirements" in the default domain
+  policy. Pair it with a banned-password list for common/breached passwords.
+references:
+  attack: ["T1110.001"]
+  cis: ["1.1.5"]
+  stig: ["V-243480"]

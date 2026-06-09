@@ -1,0 +1,21 @@
+id: AD-KRBTGT-AGE
+title: krbtgt password not rotated within 180 days
+severity: high
+category: active_directory
+description: >
+  The krbtgt account password is the key that signs all Kerberos tickets.
+  A stale krbtgt password widens the window in which a stolen domain
+  controller hash can be used to forge Golden Tickets. Rotate it on a
+  schedule (and twice in succession during incident response).
+check:
+  fact: krbtgt.password_age_days
+  operator: gt
+  value: 180
+recommendation: >
+  Rotate the krbtgt account password twice (waiting for replication between
+  rotations) using a vetted reset script, then establish a recurring rotation
+  no longer than every 180 days.
+references:
+  attack: ["T1558.001"]
+  cis: ["5.1"]
+  stig: ["V-243469"]
