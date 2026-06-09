@@ -32,6 +32,25 @@ Target ──► Collector.collect() ──► facts dict ──► Engine.evalu
 - **Scoring** (`core/scoring.py`) is intentionally explainable, not a black box.
 - **Reporting** (`reporting/`) renders exec summary + technical detail.
 
+## The scan record (core/scan_record.py)
+
+`ScanRecord` is the serializable scan artifact: **metadata + facts (evidence) +
+findings + score**, written by `secaria scan --json`. It exists so scans are
+reproducible and comparable, not just printable.
+
+- It stores the **raw facts** the verdicts came from, so a record can be
+  **re-evaluated** against a newer ruleset (`--facts scan.json` extracts them)
+  and an auditor can verify each finding.
+- Metadata carries a **ruleset fingerprint** (`rules/schema.ruleset_fingerprint`)
+  — a hash of only the verdict-affecting fields (id/severity/fact/operator/value).
+  Editing a description does not change it; changing a threshold does. A diff
+  tool uses this to tell "the environment changed" from "the rules changed."
+- `schema_version` (currently 1) gates forward-compatibility. Bump it and handle
+  the old shape in `from_dict` if you change the record layout.
+
+Diffing and suppressions (next on the roadmap) build on this record — keep it
+backward-compatible.
+
 ## Hard rules
 
 1. **Collection stays read-only.** No LDAP MODIFY, no remote writes, ever.

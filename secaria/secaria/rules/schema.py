@@ -13,6 +13,8 @@ tripped the check, and the offending items become the finding's evidence.
 from __future__ import annotations
 
 import glob
+import hashlib
+import json
 import os
 from dataclasses import dataclass, field
 from typing import Any, Callable
@@ -147,3 +149,25 @@ def load_rules_from_dir(directory: str) -> list[Rule]:
         seen[rule.id] = path
         rules.append(rule)
     return rules
+
+
+def ruleset_fingerprint(rules: list[Rule]) -> str:
+    """A short, stable hash identifying the ruleset's logic.
+
+    Two scans run with the same checks share a fingerprint, so a diff tool can
+    tell whether a change in findings came from the environment or from the
+    rules themselves. Only fields that affect the verdict are hashed — editing
+    a description or recommendation does not change the fingerprint.
+    """
+    material = [
+        {
+            "id": r.id,
+            "severity": r.severity.name,
+            "fact": r.check.fact,
+            "operator": r.check.operator,
+            "value": r.check.value,
+        }
+        for r in sorted(rules, key=lambda r: r.id)
+    ]
+    blob = json.dumps(material, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    return hashlib.sha256(blob).hexdigest()[:12]

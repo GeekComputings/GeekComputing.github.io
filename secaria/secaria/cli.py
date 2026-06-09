@@ -17,10 +17,11 @@ import os
 import sys
 
 from .core.engine import Engine, collect_facts, load_facts_file
+from .core.scan_record import build_record
 from .core.scoring import score_findings
 from .core.target import Credential, Target
 from .reporting.report import render_html, render_text
-from .rules.schema import load_rules_from_dir
+from .rules.schema import load_rules_from_dir, ruleset_fingerprint
 
 DEFAULT_RULES_DIR = os.path.join(os.path.dirname(__file__), "rules", "ad")
 
@@ -41,9 +42,24 @@ def _cmd_rules(args) -> int:
     return 0
 
 
-def _get_facts(args) -> tuple[str, dict]:
+def _load_facts_or_record(path: str) -> dict:
+    """Load a ``--facts`` file that is either raw facts or a saved scan record.
+
+    A scan record nests the captured facts under a ``facts`` key alongside
+    ``metadata``; pulling them back out lets you re-evaluate an old scan against
+    the current ruleset.
+    """
+    data = load_facts_file(path)
+    if isinstance(data, dict) and "metadata" in data and "facts" in data:
+        return data["facts"]
+    return data
+
+
+def _get_facts(args) -> tuple[str, dict, str]:
+    """Return (target_name, facts, collection_mode)."""
     if args.facts:
-        return (args.target or os.path.basename(args.facts)), load_facts_file(args.facts)
+        name = args.target or os.path.basename(args.facts)
+        return name, _load_facts_or_record(args.facts), "offline"
     if not args.target:
         raise SystemExit("error: --target is required for live collection")
     cred = Credential.from_env()
@@ -58,12 +74,12 @@ def _get_facts(args) -> tuple[str, dict]:
         authorized=args.i_have_authorization,
         credential=cred,
     )
-    return args.target, collect_facts(target, stale_days=args.stale_days)
+    return args.target, collect_facts(target, stale_days=args.stale_days), "live"
 
 
 def _cmd_scan(args) -> int:
     engine = _load_engine(args.rules_dir)
-    target_name, facts = _get_facts(args)
+    target_name, facts, collection = _get_facts(args)
     result = engine.evaluate(target_name, facts)
     score = score_findings(result.findings)
 
@@ -71,6 +87,18 @@ def _cmd_scan(args) -> int:
         with open(args.html, "w", encoding="utf-8") as fh:
             fh.write(render_html(result, score))
         print(f"wrote HTML report to {args.html}")
+    if args.json:
+        record = build_record(
+            result,
+            ruleset_fingerprint=ruleset_fingerprint(engine.rules),
+            ruleset_count=len(engine.rules),
+            collection=collection,
+            kind=args.kind,
+            stale_days=args.stale_days,
+            operator=args.operator or "",
+        )
+        record.save(args.json)
+        print(f"wrote scan record to {args.json}")
     print(render_text(result, score))
     # Non-zero exit when high/critical findings exist, so CI can gate on it.
     high = score.by_severity.get("High", 0) + score.by_severity.get("Critical", 0)
@@ -79,7 +107,7 @@ def _cmd_scan(args) -> int:
 
 def _cmd_report(args) -> int:
     engine = _load_engine(args.rules_dir)
-    facts = load_facts_file(args.facts)
+    facts = _load_facts_or_record(args.facts)
     name = args.target or os.path.basename(args.facts)
     result = engine.evaluate(name, facts)
     out = args.html or "secaria-report.html"
@@ -97,8 +125,13 @@ def build_parser() -> argparse.ArgumentParser:
     scan = sub.add_parser("scan", help="assess a target")
     scan.add_argument("--target", help="hostname/IP of the domain controller")
     scan.add_argument("--kind", default="ad", help="target kind (only 'ad' in this slice)")
-    scan.add_argument("--facts", help="evaluate a saved facts JSON file instead of live collection")
+    scan.add_argument(
+        "--facts",
+        help="evaluate a saved facts JSON file or a prior scan record instead of live collection",
+    )
     scan.add_argument("--html", help="also write an HTML report to this path")
+    scan.add_argument("--json", help="write a machine-readable scan record (metadata + evidence + findings) to this path")
+    scan.add_argument("--operator", help="who/what ran this scan, recorded in the scan metadata")
     scan.add_argument("--stale-days", type=int, default=90, help="inactivity threshold for stale accounts")
     scan.add_argument(
         "--i-have-authorization",

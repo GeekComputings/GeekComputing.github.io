@@ -38,6 +38,22 @@ Offline — evaluate a captured facts file (no domain controller needed):
 secaria scan --facts examples/sample_facts.json --target corp.example.com --html report.html
 ```
 
+Write a machine-readable **scan record** (metadata + evidence + findings) for
+auditing, re-evaluation, and future diffing:
+
+```bash
+secaria scan --facts examples/sample_facts.json --target corp.example.com --json scan.json
+```
+
+A scan record stores the raw facts it judged, plus provenance (timestamp, tool
+and ruleset version, a ruleset fingerprint, collection mode). You can re-run a
+newer ruleset over an old record's evidence — pass the record straight back to
+`--facts`:
+
+```bash
+secaria scan --facts scan.json --target corp.example.com
+```
+
 List the loaded ruleset:
 
 ```bash

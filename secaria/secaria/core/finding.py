@@ -98,3 +98,23 @@ class Finding:
                 "stig": self.references.stig,
             },
         }
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> "Finding":
+        refs = data.get("references", {}) or {}
+        return cls(
+            rule_id=data["rule_id"],
+            title=data.get("title", ""),
+            target=data.get("target", ""),
+            status=Status(data["status"]),
+            severity=Severity.from_str(data["severity"]),
+            description=data.get("description", ""),
+            recommendation=data.get("recommendation", ""),
+            evidence=data.get("evidence"),
+            category=data.get("category", ""),
+            references=FrameworkRefs(
+                attack=list(refs.get("attack", []) or []),
+                cis=list(refs.get("cis", []) or []),
+                stig=list(refs.get("stig", []) or []),
+            ),
+        )

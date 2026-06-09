@@ -38,6 +38,18 @@ class Score:
         scored = self.passed + self.failed
         return (self.passed / scored * 100) if scored else 100.0
 
+    def to_dict(self) -> dict:
+        return {
+            "grade": self.grade,
+            "risk_points": self.risk_points,
+            "pass_rate": round(self.pass_rate, 1),
+            "evaluated": self.evaluated,
+            "passed": self.passed,
+            "failed": self.failed,
+            "errored": self.errored,
+            "by_severity": self.by_severity,
+        }
+
 
 def _grade(risk_points: int, max_points: int) -> str:
     if max_points == 0:
