@@ -48,8 +48,22 @@ reproducible and comparable, not just printable.
 - `schema_version` (currently 1) gates forward-compatibility. Bump it and handle
   the old shape in `from_dict` if you change the record layout.
 
-Diffing and suppressions (next on the roadmap) build on this record — keep it
+Suppressions (next on the roadmap) build on this record — keep it
 backward-compatible.
+
+## Diffing (core/diffing.py)
+
+`diff_records(old, new)` compares two scan records, keyed on `(rule_id, target)`,
+into four buckets: **regressed**, **fixed**, **still_failing**, and
+**no_longer_evaluated**. That last bucket is load-bearing: a finding that simply
+stops being evaluated (rule removed, fact disappeared, evaluation errored) must
+**never** be reported as fixed — that would hide real exposure. When you touch
+the diff logic, preserve that distinction and its test
+(`test_dropped_check_is_not_counted_as_fixed`).
+
+The diff reports whether the two records' ruleset fingerprints match; when they
+don't, the consumer is told changes may stem from edited rules rather than the
+environment. `secaria diff` exits non-zero on regressions or dropped checks.
 
 ## Hard rules
 

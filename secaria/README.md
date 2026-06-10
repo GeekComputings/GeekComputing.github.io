@@ -54,6 +54,18 @@ newer ruleset over an old record's evidence — pass the record straight back to
 secaria scan --facts scan.json --target corp.example.com
 ```
 
+Compare two scan records to track posture over time — what regressed, what got
+fixed, what still fails:
+
+```bash
+secaria diff old.json new.json            # add --json diff.json for a machine-readable diff
+```
+
+The diff distinguishes **regressed** (failing now, wasn't before), **fixed**,
+**still failing**, and **no longer evaluated** (a check that stopped producing a
+verdict — surfaced separately so "we stopped checking" never reads as "fixed").
+It exits non-zero on regressions or dropped checks, so it can gate a pipeline.
+
 List the loaded ruleset:
 
 ```bash

@@ -16,8 +16,9 @@ import argparse
 import os
 import sys
 
+from .core.diffing import diff_records, render_diff_text
 from .core.engine import Engine, collect_facts, load_facts_file
-from .core.scan_record import build_record
+from .core.scan_record import ScanRecord, build_record
 from .core.scoring import score_findings
 from .core.target import Credential, Target
 from .reporting.report import render_html, render_text
@@ -117,6 +118,21 @@ def _cmd_report(args) -> int:
     return 0
 
 
+def _cmd_diff(args) -> int:
+    old = ScanRecord.load(args.old)
+    new = ScanRecord.load(args.new)
+    diff = diff_records(old, new)
+    if args.json:
+        import json
+
+        with open(args.json, "w", encoding="utf-8") as fh:
+            json.dump(diff.to_dict(), fh, indent=2, default=str)
+        print(f"wrote diff to {args.json}")
+    print(render_diff_text(diff))
+    # Exit non-zero on regressions (or silently-dropped checks) for CI gating.
+    return 2 if (diff.regressed or diff.no_longer_evaluated) else 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="secaria", description="Agentless security posture assessment.")
     p.add_argument("--rules-dir", default=DEFAULT_RULES_DIR, help="directory of rule YAML files")
@@ -142,6 +158,12 @@ def build_parser() -> argparse.ArgumentParser:
 
     rules = sub.add_parser("rules", help="list loaded rules")
     rules.set_defaults(func=_cmd_rules)
+
+    diff = sub.add_parser("diff", help="compare two scan records (old vs new)")
+    diff.add_argument("old", help="earlier scan record JSON (from scan --json)")
+    diff.add_argument("new", help="later scan record JSON")
+    diff.add_argument("--json", help="also write the diff as JSON to this path")
+    diff.set_defaults(func=_cmd_diff)
 
     report = sub.add_parser("report", help="render a saved facts file to HTML")
     report.add_argument("--facts", required=True, help="saved facts JSON file")
