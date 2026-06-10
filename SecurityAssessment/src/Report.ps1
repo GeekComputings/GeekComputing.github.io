@@ -10,13 +10,32 @@ function ConvertTo-HtmlEncoded {
     [System.Net.WebUtility]::HtmlEncode($Text)
 }
 
+function New-InventoryTable {
+    <# Renders an array of uniform pscustomobjects as an HTML table. #>
+    param([object[]]$Rows, [string]$Caption)
+    if (-not $Rows -or $Rows.Count -eq 0) { return '' }
+    $cols = $Rows[0].PSObject.Properties.Name
+    $head = ($cols | ForEach-Object { "<th>$(ConvertTo-HtmlEncoded $_)</th>" }) -join ''
+    $body = foreach ($r in $Rows) {
+        '<tr>' + (($cols | ForEach-Object { "<td>$(ConvertTo-HtmlEncoded ([string]$r.$_))</td>" }) -join '') + '</tr>'
+    }
+    @"
+<h2 class="inv-h">$(ConvertTo-HtmlEncoded $Caption)</h2>
+<table class="inv">
+ <thead><tr>$head</tr></thead>
+ <tbody>$($body -join "`n")</tbody>
+</table>
+"@
+}
+
 function New-HtmlReport {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory)][object[]]$Findings,
         [Parameter(Mandatory)]$Summary,
         [Parameter(Mandatory)][string]$Path,
-        [string]$Environment = 'Assessed Environment'
+        [string]$Environment = 'Assessed Environment',
+        [hashtable]$Context
     )
 
     $sevColor = @{ Critical='#b00020'; High='#e65100'; Medium='#f9a825'; Low='#1976d2'; Info='#607d8b' }
@@ -48,6 +67,34 @@ function New-HtmlReport {
 "@
     }
 
+    # --- Infrastructure & specifications section -----------------------------
+    $inventoryHtml = ''
+    if ($Context) {
+        if ($Context.Inventory -and $Context.Inventory.Servers) {
+            $inventoryHtml += New-InventoryTable -Rows @($Context.Inventory.Servers) -Caption 'Servers'
+        }
+        if ($Context.Exchange -and $Context.Exchange.Servers) {
+            $exRows = @($Context.Exchange.Servers | Select-Object Name,
+                @{ N='Version'; E={ $_.AdminDisplayVersion } }, Roles, Edition,
+                @{ N='Mailbox DBs (org)'; E={ $Context.Exchange.MailboxDatabases } })
+            $inventoryHtml += New-InventoryTable -Rows $exRows -Caption 'Exchange'
+        }
+        if ($Context.SQL) {
+            $sqlRows = @([pscustomobject]@{
+                Instance  = $Context.SQL.Instance
+                Version   = $Context.SQL.Version
+                Edition   = $Context.SQL.Edition
+                AuthMode  = if ($Context.SQL.WindowsAuthOnly) { 'Windows only' } else { 'Mixed mode' }
+                Databases = $Context.SQL.DatabaseCount
+            })
+            $inventoryHtml += New-InventoryTable -Rows $sqlRows -Caption 'SQL Server'
+        }
+        if ($inventoryHtml) {
+            $inventoryHtml = '<h1 class="sec">Infrastructure &amp; Specifications</h1>' + $inventoryHtml +
+                             '<h1 class="sec">Findings</h1>'
+        }
+    }
+
     $html = @"
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8">
@@ -73,6 +120,10 @@ function New-HtmlReport {
  details{margin-top:8px} summary{cursor:pointer;color:#1565c0;font-size:13px}
  details p{font-size:13px;margin:6px 0} .fw{color:#888;font-size:12px}
  tr.status-Pass{opacity:.7} footer{color:#888;font-size:12px;padding:20px 32px;text-align:center}
+ h1.sec{font-size:17px;color:#1a237e;margin:28px 0 4px;border-bottom:2px solid #c5cae9;padding-bottom:6px}
+ h2.inv-h{font-size:13px;color:#555;text-transform:uppercase;letter-spacing:.5px;margin:18px 0 6px}
+ table.inv td,table.inv th{font-size:13px;padding:8px 10px;white-space:normal}
+ table.inv{margin-bottom:8px}
 </style></head><body>
 <header>
   <h1>Security Posture Assessment</h1>
@@ -88,6 +139,7 @@ function New-HtmlReport {
   <div class="card"><div class="n" style="color:#2e7d32">$($Summary.Passed)</div><div class="l">Passed</div></div>
   <div class="card"><div class="n" style="color:#9e9e9e">$($Summary.NotAssessed)</div><div class="l">Not assessed</div></div>
  </div>
+ $inventoryHtml
  <table>
   <thead><tr><th>Status</th><th>Severity</th><th>ID</th><th>Finding</th></tr></thead>
   <tbody>

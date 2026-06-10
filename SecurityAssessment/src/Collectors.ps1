@@ -108,13 +108,107 @@ function Get-WindowsServerContext {
     }
 }
 
+function Get-ServerInventory {
+    <# Hardware/OS specifications for one or more servers (read-only CIM).
+       Returned objects feed the report's Infrastructure section. #>
+    [CmdletBinding()] param([string[]]$ComputerName = @($env:COMPUTERNAME))
+    if (-not (Test-CommandAvailable 'Get-CimInstance')) { return $null }
+
+    $inventory = foreach ($computer in $ComputerName) {
+        try {
+            $cimArgs = @{}
+            if ($computer -ne $env:COMPUTERNAME) { $cimArgs.ComputerName = $computer }
+
+            $os   = Get-CimInstance Win32_OperatingSystem @cimArgs -ErrorAction Stop
+            $cs   = Get-CimInstance Win32_ComputerSystem @cimArgs -ErrorAction Stop
+            $cpu  = Get-CimInstance Win32_Processor @cimArgs -ErrorAction Stop | Select-Object -First 1
+            $disk = Get-CimInstance Win32_LogicalDisk -Filter 'DriveType=3' @cimArgs -ErrorAction Stop
+
+            [pscustomobject]@{
+                Name      = $cs.Name
+                OS        = $os.Caption
+                Build     = $os.BuildNumber
+                CPU       = $cpu.Name
+                Cores     = ($cs.NumberOfLogicalProcessors)
+                MemoryGB  = [math]::Round($cs.TotalPhysicalMemory / 1GB, 1)
+                Disks     = ($disk | ForEach-Object {
+                                "{0} {1}/{2} GB free" -f $_.DeviceID,
+                                    [math]::Round($_.FreeSpace/1GB), [math]::Round($_.Size/1GB)
+                             }) -join '; '
+                UptimeDays = [math]::Round(((Get-Date) - $os.LastBootUpTime).TotalDays, 1)
+            }
+        }
+        catch {
+            Write-Warning "Inventory collection failed for ${computer}: $($_.Exception.Message)"
+        }
+    }
+    @($inventory)
+}
+
+function Get-SqlContext {
+    <# SQL Server posture + specs via Invoke-Sqlcmd (SqlServer module).
+       All queries are read-only catalog/SERVERPROPERTY lookups. #>
+    [CmdletBinding()] param([string]$ServerInstance = 'localhost')
+    if (-not (Test-CommandAvailable 'Invoke-Sqlcmd')) {
+        Write-Warning 'SqlServer module (Invoke-Sqlcmd) not available - skipping SQL collection.'
+        return $null
+    }
+    try {
+        $props = Invoke-Sqlcmd -ServerInstance $ServerInstance -Query @"
+SELECT SERVERPROPERTY('ProductVersion')  AS Version,
+       SERVERPROPERTY('ProductLevel')    AS Level,
+       SERVERPROPERTY('Edition')         AS Edition,
+       SERVERPROPERTY('IsIntegratedSecurityOnly') AS WindowsAuthOnly
+"@ -ErrorAction Stop
+
+        $sa = Invoke-Sqlcmd -ServerInstance $ServerInstance -Query `
+            "SELECT name, is_disabled FROM sys.server_principals WHERE sid = 0x01" -ErrorAction Stop
+
+        $xp = Invoke-Sqlcmd -ServerInstance $ServerInstance -Query `
+            "SELECT CAST(value_in_use AS int) AS v FROM sys.configurations WHERE name = 'xp_cmdshell'" -ErrorAction Stop
+
+        $dbCount = (Invoke-Sqlcmd -ServerInstance $ServerInstance -Query `
+            "SELECT COUNT(*) AS n FROM sys.databases WHERE database_id > 4" -ErrorAction Stop).n
+
+        $oldestBackup = Invoke-Sqlcmd -ServerInstance $ServerInstance -Query @"
+SELECT MAX(d.days_since) AS days FROM (
+  SELECT DATEDIFF(day, MAX(b.backup_finish_date), GETDATE()) AS days_since
+  FROM sys.databases s
+  LEFT JOIN msdb.dbo.backupset b ON b.database_name = s.name AND b.type = 'D'
+  WHERE s.database_id > 4 AND s.state = 0
+  GROUP BY s.name
+) d
+"@ -ErrorAction Stop
+
+        @{
+            Instance            = $ServerInstance
+            Version             = [string]$props.Version
+            Edition             = [string]$props.Edition
+            WindowsAuthOnly     = [bool]$props.WindowsAuthOnly
+            SaDisabled          = [bool]$sa.is_disabled
+            SaRenamed           = ($sa.name -ne 'sa')
+            XpCmdshellEnabled   = ($xp.v -eq 1)
+            DatabaseCount       = [int]$dbCount
+            OldestBackupAgeDays = if ($null -ne $oldestBackup.days) { [int]$oldestBackup.days } else { 9999 }
+        }
+    }
+    catch {
+        Write-Warning "SQL collection failed: $($_.Exception.Message)"
+        return $null
+    }
+}
+
 function Get-ExchangeContext {
     [CmdletBinding()] param()
     if (-not (Test-CommandAvailable 'Get-ExchangeServer')) { return $null }
     try {
         $servers = Get-ExchangeServer -ErrorAction Stop
+        $dbCount = @(Get-MailboxDatabase -ErrorAction SilentlyContinue).Count
         @{
-            Servers            = @($servers | Select-Object Name, AdminDisplayVersion)
+            Servers            = @($servers | Select-Object Name, AdminDisplayVersion,
+                                     @{ N='Roles';   E={ $_.ServerRole } },
+                                     @{ N='Edition'; E={ $_.Edition } })
+            MailboxDatabases   = $dbCount
             BasicAuthEnabled   = [bool]((Get-AuthenticationPolicy -ErrorAction SilentlyContinue) -eq $null)
             EcpExternallyPublished = [bool]((Get-EcpVirtualDirectory -ErrorAction SilentlyContinue).ExternalUrl)
         }
@@ -189,7 +283,8 @@ function Get-DemoContext {
             LastHotfixDate     = (Get-Date).AddDays(-210)
         }
         Exchange = @{
-            Servers                = @([pscustomobject]@{ Name='EXCH01'; AdminDisplayVersion='Version 15.1 (Build 2375.7)' })
+            Servers                = @([pscustomobject]@{ Name='EXCH01'; AdminDisplayVersion='Version 15.1 (Build 2375.7)'; Roles='Mailbox'; Edition='Standard' })
+            MailboxDatabases       = 4
             BasicAuthEnabled       = $true
             EcpExternallyPublished = $true
         }
@@ -198,6 +293,26 @@ function Get-DemoContext {
             ConditionalAccess = @([pscustomobject]@{ DisplayName='Require MFA - Admins'; State='enabledForReportingButNotEnforced' })
             LegacyAuthBlocked = $false
             SecurityDefaults  = $false
+        }
+        SQL = @{
+            Instance            = 'SQL01\PROD'
+            Version             = '13.0.5026.0'   # SQL Server 2016 SP2 - out of support
+            Edition             = 'Standard Edition (64-bit)'
+            WindowsAuthOnly     = $false
+            SaDisabled          = $false
+            SaRenamed           = $false
+            XpCmdshellEnabled   = $true
+            DatabaseCount       = 12
+            OldestBackupAgeDays = 19
+        }
+        Inventory = @{
+            Servers = @(
+                [pscustomobject]@{ Name='SRV-DC01';   OS='Windows Server 2016 Standard';    Build='14393'; CPU='Intel Xeon E5-2640 v4'; Cores=8;  MemoryGB=16;  Disks='C: 38/120 GB free';                UptimeDays=212.4 }
+                [pscustomobject]@{ Name='SRV-FILE01'; OS='Windows Server 2012 R2 Standard'; Build='9600';  CPU='Intel Xeon E5-2620 v3'; Cores=12; MemoryGB=32;  Disks='C: 12/120 GB free; D: 410/2048 GB free'; UptimeDays=388.7 }
+                [pscustomobject]@{ Name='SRV-APP01';  OS='Windows Server 2019 Standard';    Build='17763'; CPU='Intel Xeon Silver 4214'; Cores=16; MemoryGB=64; Disks='C: 95/240 GB free';                UptimeDays=45.2 }
+                [pscustomobject]@{ Name='EXCH01';     OS='Windows Server 2016 Standard';    Build='14393'; CPU='Intel Xeon Gold 5118';   Cores=24; MemoryGB=96; Disks='C: 60/240 GB free; E: 800/4096 GB free'; UptimeDays=97.1 }
+                [pscustomobject]@{ Name='SQL01';      OS='Windows Server 2016 Standard';    Build='14393'; CPU='Intel Xeon Gold 6130';   Cores=32; MemoryGB=128; Disks='C: 80/240 GB free; F: 350/2048 GB free'; UptimeDays=130.5 }
+            )
         }
     }
 }

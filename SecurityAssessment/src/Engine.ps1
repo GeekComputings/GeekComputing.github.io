@@ -27,7 +27,7 @@ function New-AssessmentCheck {
         [Parameter(Mandatory)][string]$Id,
         [Parameter(Mandatory)][string]$Title,
         [Parameter(Mandatory)][string]$Category,
-        [Parameter(Mandatory)][ValidateSet('AD','WindowsServer','Exchange','M365')][string]$Requires,
+        [Parameter(Mandatory)][ValidateSet('AD','WindowsServer','Exchange','M365','SQL')][string]$Requires,
         [Parameter(Mandatory)][ValidateSet('Critical','High','Medium','Low','Info')][string]$Severity,
         [Parameter(Mandatory)][string]$Rationale,
         [Parameter(Mandatory)][string]$Remediation,

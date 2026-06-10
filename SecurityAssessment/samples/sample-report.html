@@ -22,21 +22,42 @@
  details{margin-top:8px} summary{cursor:pointer;color:#1565c0;font-size:13px}
  details p{font-size:13px;margin:6px 0} .fw{color:#888;font-size:12px}
  tr.status-Pass{opacity:.7} footer{color:#888;font-size:12px;padding:20px 32px;text-align:center}
+ h1.sec{font-size:17px;color:#1a237e;margin:28px 0 4px;border-bottom:2px solid #c5cae9;padding-bottom:6px}
+ h2.inv-h{font-size:13px;color:#555;text-transform:uppercase;letter-spacing:.5px;margin:18px 0 6px}
+ table.inv td,table.inv th{font-size:13px;padding:8px 10px;white-space:normal}
+ table.inv{margin-bottom:8px}
 </style></head><body>
 <header>
   <h1>Security Posture Assessment</h1>
-  <div class="sub">corp.contoso.com (DEMO) &bull; generated 2026-06-10 00:58</div>
+  <div class="sub">corp.contoso.com (DEMO) &bull; generated 2026-06-10 05:39</div>
 </header>
 <div class="wrap">
  <div class="cards">
-  <div class="card grade"><div class="n">F (12)</div><div class="l">Posture score</div></div>
-  <div class="card"><div class="n" style="color:#b00020">3</div><div class="l">Critical</div></div>
-  <div class="card"><div class="n" style="color:#e65100">9</div><div class="l">High</div></div>
+  <div class="card grade"><div class="n">F (9)</div><div class="l">Posture score</div></div>
+  <div class="card"><div class="n" style="color:#b00020">4</div><div class="l">Critical</div></div>
+  <div class="card"><div class="n" style="color:#e65100">13</div><div class="l">High</div></div>
   <div class="card"><div class="n" style="color:#f9a825">6</div><div class="l">Medium</div></div>
   <div class="card"><div class="n" style="color:#1976d2">1</div><div class="l">Low</div></div>
   <div class="card"><div class="n" style="color:#2e7d32">2</div><div class="l">Passed</div></div>
   <div class="card"><div class="n" style="color:#9e9e9e">0</div><div class="l">Not assessed</div></div>
  </div>
+ <h1 class="sec">Infrastructure &amp; Specifications</h1><h2 class="inv-h">Servers</h2>
+<table class="inv">
+ <thead><tr><th>Name</th><th>OS</th><th>Build</th><th>CPU</th><th>Cores</th><th>MemoryGB</th><th>Disks</th><th>UptimeDays</th></tr></thead>
+ <tbody><tr><td>SRV-DC01</td><td>Windows Server 2016 Standard</td><td>14393</td><td>Intel Xeon E5-2640 v4</td><td>8</td><td>16</td><td>C: 38/120 GB free</td><td>212.4</td></tr>
+<tr><td>SRV-FILE01</td><td>Windows Server 2012 R2 Standard</td><td>9600</td><td>Intel Xeon E5-2620 v3</td><td>12</td><td>32</td><td>C: 12/120 GB free; D: 410/2048 GB free</td><td>388.7</td></tr>
+<tr><td>SRV-APP01</td><td>Windows Server 2019 Standard</td><td>17763</td><td>Intel Xeon Silver 4214</td><td>16</td><td>64</td><td>C: 95/240 GB free</td><td>45.2</td></tr>
+<tr><td>EXCH01</td><td>Windows Server 2016 Standard</td><td>14393</td><td>Intel Xeon Gold 5118</td><td>24</td><td>96</td><td>C: 60/240 GB free; E: 800/4096 GB free</td><td>97.1</td></tr>
+<tr><td>SQL01</td><td>Windows Server 2016 Standard</td><td>14393</td><td>Intel Xeon Gold 6130</td><td>32</td><td>128</td><td>C: 80/240 GB free; F: 350/2048 GB free</td><td>130.5</td></tr></tbody>
+</table><h2 class="inv-h">Exchange</h2>
+<table class="inv">
+ <thead><tr><th>Name</th><th>Version</th><th>Roles</th><th>Edition</th><th>Mailbox DBs (org)</th></tr></thead>
+ <tbody><tr><td>EXCH01</td><td>Version 15.1 (Build 2375.7)</td><td>Mailbox</td><td>Standard</td><td>4</td></tr></tbody>
+</table><h2 class="inv-h">SQL Server</h2>
+<table class="inv">
+ <thead><tr><th>Instance</th><th>Version</th><th>Edition</th><th>AuthMode</th><th>Databases</th></tr></thead>
+ <tbody><tr><td>SQL01\PROD</td><td>13.0.5026.0</td><td>Standard Edition (64-bit)</td><td>Mixed mode</td><td>12</td></tr></tbody>
+</table><h1 class="sec">Findings</h1>
  <table>
   <thead><tr><th>Status</th><th>Severity</th><th>ID</th><th>Finding</th></tr></thead>
   <tbody>
@@ -90,6 +111,22 @@
 </tr>
 <tr class="status-Fail">
   <td><span class="badge" style="background:#b00020">Fail</span></td>
+  <td><span class="badge" style="background:#b00020">Critical</span></td>
+  <td class="id">SQL-001</td>
+  <td>
+    <div class="title">SQL Server version is supported and patched</div>
+    <div class="cat">SQL Server</div>
+    <div class="evidence">Instance SQL01\PROD is build 13.0.5026.0 (Standard Edition (64-bit)).</div>
+    <div class="affected"><strong>Affected:</strong> </div>
+    <details><summary>Rationale &amp; remediation</summary>
+      <p><strong>Why it matters:</strong> Out-of-support SQL Server builds receive no security fixes; database engines are high-value targets holding the organisation&#39;s most sensitive data.</p>
+      <p><strong>Recommendation:</strong> Upgrade to a supported SQL Server version (2019+) and apply the latest CU. Track end-of-support dates and plan migrations 12 months ahead.</p>
+      <p class="fw">CIS: 1.x (SQL) &bull; E8: Patch Applications &bull; NIST: SI-2</p>
+    </details>
+  </td>
+</tr>
+<tr class="status-Fail">
+  <td><span class="badge" style="background:#b00020">Fail</span></td>
   <td><span class="badge" style="background:#e65100">High</span></td>
   <td class="id">AD-001</td>
   <td>
@@ -116,7 +153,7 @@
     <details><summary>Rationale &amp; remediation</summary>
       <p><strong>Why it matters:</strong> Excess members in Domain/Enterprise Admins expand the blast radius of a single credential compromise. Service and helpdesk accounts rarely need this tier.</p>
       <p><strong>Recommendation:</strong> Remove standing membership from Domain/Enterprise Admins. Adopt a tiered admin model, use PAM/JIT elevation, and dedicated admin accounts (no service accounts).</p>
-      <p class="fw">CIS: 5.x &bull; MS: Tiered Admin Model &bull; E8: Restrict Admin Privileges</p>
+      <p class="fw">CIS: 5.x &bull; E8: Restrict Admin Privileges &bull; MS: Tiered Admin Model</p>
     </details>
   </td>
 </tr>
@@ -132,7 +169,7 @@
     <details><summary>Rationale &amp; remediation</summary>
       <p><strong>Why it matters:</strong> Reversible encryption stores passwords in a recoverable form, equivalent to cleartext for an attacker with directory access.</p>
       <p><strong>Recommendation:</strong> Disable &quot;Store password using reversible encryption&quot; on all accounts and the domain policy, then force a password reset for affected users.</p>
-      <p class="fw">NIST: IA-5 &bull; CIS: 1.1.x</p>
+      <p class="fw">CIS: 1.1.x &bull; NIST: IA-5</p>
     </details>
   </td>
 </tr>
@@ -181,6 +218,70 @@
       <p><strong>Why it matters:</strong> Microsoft recommends fewer than 5 Global Admins. Excess GAs widen the blast radius and complicate monitoring.</p>
       <p><strong>Recommendation:</strong> Reduce Global Admins to &lt;5 break-glass/named accounts. Use least-privilege roles and Privileged Identity Management (PIM) for just-in-time elevation.</p>
       <p class="fw">E8: Restrict Admin Privileges &bull; MS: Identity Secure Score &bull; NIST: AC-6</p>
+    </details>
+  </td>
+</tr>
+<tr class="status-Fail">
+  <td><span class="badge" style="background:#b00020">Fail</span></td>
+  <td><span class="badge" style="background:#e65100">High</span></td>
+  <td class="id">SQL-002</td>
+  <td>
+    <div class="title">Windows Authentication mode only</div>
+    <div class="cat">SQL Server</div>
+    <div class="evidence">Windows-auth-only: False.</div>
+    <div class="affected"><strong>Affected:</strong> </div>
+    <details><summary>Rationale &amp; remediation</summary>
+      <p><strong>Why it matters:</strong> Mixed mode enables SQL logins with passwords stored in the instance - no MFA, no AD lockout policy, and a separate credential set to spray.</p>
+      <p><strong>Recommendation:</strong> Switch to Windows Authentication mode where applications allow it; migrate SQL logins to AD-integrated logins or contained users with strong policies.</p>
+      <p class="fw">CIS: 3.1 (SQL) &bull; NIST: IA-2</p>
+    </details>
+  </td>
+</tr>
+<tr class="status-Fail">
+  <td><span class="badge" style="background:#b00020">Fail</span></td>
+  <td><span class="badge" style="background:#e65100">High</span></td>
+  <td class="id">SQL-003</td>
+  <td>
+    <div class="title">sa account is disabled and renamed</div>
+    <div class="cat">SQL Server</div>
+    <div class="evidence">sa disabled: False, renamed: False.</div>
+    <div class="affected"><strong>Affected:</strong> </div>
+    <details><summary>Rationale &amp; remediation</summary>
+      <p><strong>Why it matters:</strong> The sa account is the best-known SQL principal and the first target of brute-force attacks; enabled with its default name it is a standing risk.</p>
+      <p><strong>Recommendation:</strong> Disable the sa login (ALTER LOGIN sa DISABLE) and rename it. Use named admin logins with least privilege instead.</p>
+      <p class="fw">CIS: 2.13/2.14 (SQL) &bull; NIST: AC-2</p>
+    </details>
+  </td>
+</tr>
+<tr class="status-Fail">
+  <td><span class="badge" style="background:#b00020">Fail</span></td>
+  <td><span class="badge" style="background:#e65100">High</span></td>
+  <td class="id">SQL-004</td>
+  <td>
+    <div class="title">xp_cmdshell is disabled</div>
+    <div class="cat">SQL Server</div>
+    <div class="evidence">xp_cmdshell enabled: True.</div>
+    <div class="affected"><strong>Affected:</strong> </div>
+    <details><summary>Rationale &amp; remediation</summary>
+      <p><strong>Why it matters:</strong> xp_cmdshell lets anyone with sysadmin run OS commands as the SQL service account - a standard privilege-escalation and lateral-movement path.</p>
+      <p><strong>Recommendation:</strong> Disable it: EXEC sp_configure &#39;xp_cmdshell&#39;, 0; RECONFIGURE. Audit for jobs/applications that depend on it and replace them.</p>
+      <p class="fw">CIS: 2.2 (SQL) &bull; NIST: CM-7</p>
+    </details>
+  </td>
+</tr>
+<tr class="status-Fail">
+  <td><span class="badge" style="background:#b00020">Fail</span></td>
+  <td><span class="badge" style="background:#e65100">High</span></td>
+  <td class="id">SQL-005</td>
+  <td>
+    <div class="title">All user databases backed up within 7 days</div>
+    <div class="cat">SQL Server</div>
+    <div class="evidence">Oldest full backup across 12 user database(s): 19 day(s) ago.</div>
+    <div class="affected"><strong>Affected:</strong> </div>
+    <details><summary>Rationale &amp; remediation</summary>
+      <p><strong>Why it matters:</strong> Backups are the last line of defence against ransomware and data loss. A database without a recent full backup is unrecoverable.</p>
+      <p><strong>Recommendation:</strong> Schedule full backups (daily or per RPO) for every user database, verify restores regularly, and keep offline/immutable copies.</p>
+      <p class="fw">E8: Regular Backups &bull; NIST: CP-9</p>
     </details>
   </td>
 </tr>
@@ -340,7 +441,7 @@
     <details><summary>Rationale &amp; remediation</summary>
       <p><strong>Why it matters:</strong> Enabled accounts unused for 90+ days are prime targets for password spraying and go unnoticed if compromised.</p>
       <p><strong>Recommendation:</strong> Disable accounts inactive for 90+ days after verification, then remove after a retention window. Automate with a scheduled review.</p>
-      <p class="fw">NIST: AC-2 &bull; CIS: 5.x</p>
+      <p class="fw">CIS: 5.x &bull; NIST: AC-2</p>
     </details>
   </td>
 </tr>
@@ -372,7 +473,7 @@
     <details><summary>Rationale &amp; remediation</summary>
       <p><strong>Why it matters:</strong> A host firewall limits lateral movement and exposure of management ports even inside the perimeter.</p>
       <p><strong>Recommendation:</strong> Enable the firewall for Domain, Private and Public profiles via GPO; allow only required inbound services.</p>
-      <p class="fw">NIST: SC-7 &bull; CIS: 9.x</p>
+      <p class="fw">CIS: 9.x &bull; NIST: SC-7</p>
     </details>
   </td>
 </tr>

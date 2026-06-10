@@ -1,9 +1,11 @@
 # SecurityAssessment
 
 A read-only PowerShell tool that assesses the security posture of a Microsoft
-estate — **Windows Server, Active Directory, Exchange (on-prem) and
+estate — **Windows Server, Active Directory, Exchange (on-prem), SQL Server and
 Microsoft 365 / Entra ID** — and produces a prioritised gap report with
-remediation guidance.
+remediation guidance, plus an **infrastructure inventory** (server hardware/OS
+specs, Exchange topology, SQL instances) so the report shows exactly what was
+assessed.
 
 Findings are mapped to **CIS Benchmarks**, **Microsoft Security Baselines**,
 **NIST 800-53** and **ASD Essential 8**.
@@ -38,10 +40,12 @@ Reports are written to `./reports` (HTML by default; JSON and CSV optional).
 ```
  Collectors            Engine                 Reporting
  ───────────           ──────                 ─────────
- Get-ADContext   ─┐                      ┌─►  HTML dashboard
- Get-Windows...  ─┼─►  $Context  ─►  checks/*.checks.ps1  ─┼─►  JSON
- Get-Exchange... ─┤    (hashtable)   (data-driven rules)   ├─►  CSV
- Get-M365Context ─┘                                        └─►  console summary
+ Get-ADContext      ─┐                      ┌─►  HTML dashboard (incl. infra inventory)
+ Get-Windows...     ─┤                      │
+ Get-Exchange...    ─┼─►  $Context  ─►  checks/*.checks.ps1  ─┼─►  JSON
+ Get-M365Context    ─┤    (hashtable)   (data-driven rules)   ├─►  CSV
+ Get-SqlContext     ─┤                                        └─►  console summary
+ Get-ServerInventory─┘
 ```
 
 1. **Collectors** (`src/Collectors.ps1`) gather read-only state from each
@@ -81,12 +85,18 @@ Then make sure the collector populates the field(s) your `-Test` reads.
 | Windows Server | 6 | SMBv1, RDP NLA, host firewall, legacy TLS, patch age, local admins |
 | Exchange (on-prem) | 3 | build/patch level, basic auth, ECP exposure |
 | M365 / Entra ID | 4 | legacy auth, admin MFA enforcement, Global Admin count, Conditional Access baseline |
+| SQL Server | 5 | supported/patched build, auth mode, sa account, xp_cmdshell, backup recency |
+
+The HTML report also opens with an **Infrastructure & Specifications** section:
+per-server OS/CPU/RAM/disk/uptime, Exchange servers (version, roles, edition,
+mailbox databases) and SQL instances (version, edition, auth mode, databases).
 
 ## Requirements
 
 - PowerShell 5.1+ or PowerShell 7+
 - For live collection: the relevant RSAT/AD module, Exchange Management Shell,
-  and `Microsoft.Graph` (run `Connect-MgGraph` first for M365). `-Demo` needs
+  `Microsoft.Graph` (run `Connect-MgGraph` first for M365) and the `SqlServer`
+  module for SQL checks (`-SqlInstance` selects the instance). `-Demo` needs
   none of these.
 
 ## Roadmap

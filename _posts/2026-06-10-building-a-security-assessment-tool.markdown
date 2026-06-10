@@ -12,8 +12,9 @@ are only as good as the memory of whoever ran them.
 
 So I built a small tool to do it properly — a **read-only PowerShell assessment
 tool** that walks a Microsoft estate (Windows Server, Active Directory, Exchange
-on-prem, and Microsoft 365 / Entra ID), checks it against known-good baselines,
-and spits out a prioritised list of gaps with a recommendation for each one. The
+on-prem, SQL Server, and Microsoft 365 / Entra ID), checks it against known-good
+baselines, and spits out a prioritised list of gaps with a recommendation for
+each one — along with an inventory of the infrastructure it assessed. The
 full source lives in [`/SecurityAssessment`]({{ site.baseurl }}/SecurityAssessment)
 in this repo.
 
@@ -73,7 +74,7 @@ extend:
 
 ## What it checks today
 
-Twenty-one checks across four modules, each mapped to **CIS Benchmarks**,
+Twenty-six checks across five modules, each mapped to **CIS Benchmarks**,
 **Microsoft Security Baselines**, **NIST 800-53** and **ASD Essential 8**:
 
 | Module | What it looks for |
@@ -82,6 +83,13 @@ Twenty-one checks across four modules, each mapped to **CIS Benchmarks**,
 | Windows Server | SMBv1, RDP Network Level Authentication, host firewall, legacy TLS/SSL, patch age, local administrator membership |
 | Exchange (on-prem) | supported/patched build, basic authentication, externally-exposed ECP |
 | M365 / Entra ID | legacy auth blocking, admin MFA enforcement, Global Admin count, Conditional Access baseline |
+| SQL Server | supported/patched build, authentication mode, `sa` account state, `xp_cmdshell`, backup recency |
+
+The report doesn't just list gaps — it opens with an **Infrastructure &
+Specifications** section: every server's OS, CPU, RAM, disks and uptime, the
+Exchange servers with their versions and roles, and the SQL instances with
+edition and authentication mode. An assessment is only as credible as its
+scope, and this section shows exactly what was looked at.
 
 ## Trying it without an environment
 
@@ -93,12 +101,12 @@ deliberately-imperfect synthetic data:
 {% endhighlight %}
 
 ```
-Loaded 21 checks.
+Loaded 26 checks.
 Running in DEMO mode (synthetic data).
 
-Posture score: 12/100 (Grade F)
-Critical 3  High 9  Medium 6  Low 1  Passed 2  NotAssessed 0
-HTML report: .\reports\assessment-20260610-005803.html
+Posture score: 9/100 (Grade F)
+Critical 4  High 13  Medium 6  Low 1  Passed 2  NotAssessed 0
+HTML report: .\reports\assessment-20260610-053954.html
 ```
 
 The HTML report groups findings by risk, badges them by severity, and tucks the

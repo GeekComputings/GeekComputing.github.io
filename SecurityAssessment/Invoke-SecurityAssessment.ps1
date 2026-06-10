@@ -10,7 +10,10 @@
     remediation guidance. Nothing is changed on the targets.
 
 .PARAMETER Target
-    One or more of: AD, WindowsServer, Exchange, M365. Defaults to all.
+    One or more of: AD, WindowsServer, Exchange, M365, SQL. Defaults to all.
+
+.PARAMETER SqlInstance
+    SQL Server instance to assess (default: localhost). Used when Target includes SQL.
 
 .PARAMETER Demo
     Run against bundled synthetic data - no live environment required. Useful for
@@ -30,8 +33,10 @@
 #>
 [CmdletBinding()]
 param(
-    [ValidateSet('AD','WindowsServer','Exchange','M365')]
-    [string[]]$Target = @('AD','WindowsServer','Exchange','M365'),
+    [ValidateSet('AD','WindowsServer','Exchange','M365','SQL')]
+    [string[]]$Target = @('AD','WindowsServer','Exchange','M365','SQL'),
+
+    [string]$SqlInstance = 'localhost',
 
     [switch]$Demo,
 
@@ -68,6 +73,11 @@ else {
     if ($Target -contains 'WindowsServer') { $context['WindowsServer'] = Get-WindowsServerContext }
     if ($Target -contains 'Exchange')      { $context['Exchange']      = Get-ExchangeContext }
     if ($Target -contains 'M365')          { $context['M365']          = Get-M365Context }
+    if ($Target -contains 'SQL')           { $context['SQL']           = Get-SqlContext -ServerInstance $SqlInstance }
+
+    # Infrastructure specs for the report's inventory section.
+    $servers = Get-ServerInventory
+    if ($servers) { $context['Inventory'] = @{ Servers = $servers } }
 }
 
 # Only evaluate checks whose target was requested.
@@ -89,12 +99,13 @@ $stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
 
 if ($Format -contains 'HTML') {
     $p = Join-Path $OutputPath "assessment-$stamp.html"
-    New-HtmlReport -Findings $findings -Summary $summary -Path $p -Environment $EnvironmentName | Out-Null
+    New-HtmlReport -Findings $findings -Summary $summary -Path $p -Environment $EnvironmentName -Context $context | Out-Null
     Write-Host "HTML report: $p" -ForegroundColor Green
 }
 if ($Format -contains 'JSON') {
     $p = Join-Path $OutputPath "assessment-$stamp.json"
-    [pscustomobject]@{ Summary = $summary; Findings = $findings } | ConvertTo-Json -Depth 6 | Out-File $p -Encoding utf8
+    [pscustomobject]@{ Summary = $summary; Inventory = $context['Inventory']; Findings = $findings } |
+        ConvertTo-Json -Depth 6 | Out-File $p -Encoding utf8
     Write-Host "JSON report: $p" -ForegroundColor Green
 }
 if ($Format -contains 'CSV') {
