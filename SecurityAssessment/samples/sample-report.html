@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Security Assessment Report - corp.contoso.com (DEMO)</title>
+<style>
+ body{font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;margin:0;color:#212121;background:#f5f5f5}
+ header{background:#1a237e;color:#fff;padding:24px 32px}
+ header h1{margin:0;font-size:22px} header .sub{opacity:.8;font-size:13px;margin-top:4px}
+ .wrap{max-width:1100px;margin:0 auto;padding:24px 32px}
+ .cards{display:flex;flex-wrap:wrap;gap:16px;margin:24px 0}
+ .card{background:#fff;border-radius:10px;padding:18px 22px;box-shadow:0 1px 3px rgba(0,0,0,.12);flex:1;min-width:120px}
+ .card .n{font-size:30px;font-weight:700} .card .l{font-size:12px;color:#666;text-transform:uppercase;letter-spacing:.5px}
+ .grade{background:#b00020;color:#fff}
+ table{width:100%;border-collapse:collapse;background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+ th{background:#eceff1;text-align:left;padding:10px 12px;font-size:12px;text-transform:uppercase;color:#555}
+ td{padding:12px;border-top:1px solid #eee;vertical-align:top;font-size:14px}
+ .badge{color:#fff;padding:2px 9px;border-radius:12px;font-size:11px;font-weight:600;white-space:nowrap}
+ .id{font-family:Consolas,monospace;color:#555;font-size:12px}
+ .title{font-weight:600} .cat{color:#888;font-size:12px;margin-top:2px}
+ .evidence{margin-top:6px;font-size:13px;color:#444;background:#f9f9f9;padding:6px 8px;border-left:3px solid #bbb;border-radius:3px}
+ .affected{margin-top:6px;font-size:12px;color:#666}
+ details{margin-top:8px} summary{cursor:pointer;color:#1565c0;font-size:13px}
+ details p{font-size:13px;margin:6px 0} .fw{color:#888;font-size:12px}
+ tr.status-Pass{opacity:.7} footer{color:#888;font-size:12px;padding:20px 32px;text-align:center}
+</style></head><body>
+<header>
+  <h1>Security Posture Assessment</h1>
+  <div class="sub">corp.contoso.com (DEMO) &bull; generated 2026-06-10 00:58</div>
+</header>
+<div class="wrap">
+ <div class="cards">
+  <div class="card grade"><div class="n">F (12)</div><div class="l">Posture score</div></div>
+  <div class="card"><div class="n" style="color:#b00020">3</div><div class="l">Critical</div></div>
+  <div class="card"><div class="n" style="color:#e65100">9</div><div class="l">High</div></div>
+  <div class="card"><div class="n" style="color:#f9a825">6</div><div class="l">Medium</div></div>
+  <div class="card"><div class="n" style="color:#1976d2">1</div><div class="l">Low</div></div>
+  <div class="card"><div class="n" style="color:#2e7d32">2</div><div class="l">Passed</div></div>
+  <div class="card"><div class="n" style="color:#9e9e9e">0</div><div class="l">Not assessed</div></div>
+ </div>
+ <table>
+  <thead><tr><th>Status</th><th>Severity</th><th>ID</th><th>Finding</th></tr></thead>
+  <tbody>
+  <tr class="status-Fail">
+  <td><span class="badge" style="background:#b00020">Fail</span></td>
+  <td><span class="badge" style="background:#b00020">Critical</span></td>
+  <td class="id">AD-003</td>
+  <td>
+    <div class="title">No accounts with unconstrained delegation</div>
+    <div class="cat">Active Directory</div>
+    <div class="evidence">2 host(s) configured for unconstrained delegation.</div>
+    <div class="affected"><strong>Affected:</strong> SRV-APP01, SRV-LEGACY02</div>
+    <details><summary>Rationale &amp; remediation</summary>
+      <p><strong>Why it matters:</strong> Unconstrained delegation lets a compromised host impersonate any user that authenticates to it, including Domain Admins - a direct path to domain takeover.</p>
+      <p><strong>Recommendation:</strong> Replace unconstrained delegation with constrained or resource-based constrained delegation. Mark sensitive accounts &quot;Account is sensitive and cannot be delegated&quot;.</p>
+      <p class="fw">NIST: AC-6 &bull; MS: Securing Privileged Access</p>
+    </details>
+  </td>
+</tr>
+<tr class="status-Fail">
+  <td><span class="badge" style="background:#b00020">Fail</span></td>
+  <td><span class="badge" style="background:#b00020">Critical</span></td>
+  <td class="id">M365-001</td>
+  <td>
+    <div class="title">Legacy authentication is blocked</div>
+    <div class="cat">M365 / Entra ID</div>
+    <div class="evidence">LegacyAuthBlocked=False, SecurityDefaults=False.</div>
+    <div class="affected"><strong>Affected:</strong> </div>
+    <details><summary>Rationale &amp; remediation</summary>
+      <p><strong>Why it matters:</strong> Legacy auth protocols cannot enforce MFA and account for the bulk of successful password-spray compromises in Entra ID.</p>
+      <p><strong>Recommendation:</strong> Create a Conditional Access policy blocking legacy authentication clients for all users, or enable Security Defaults.</p>
+      <p class="fw">E8: Multi-factor Authentication &bull; MS: Identity Secure Score &bull; NIST: IA-2</p>
+    </details>
+  </td>
+</tr>
+<tr class="status-Fail">
+  <td><span class="badge" style="background:#b00020">Fail</span></td>
+  <td><span class="badge" style="background:#b00020">Critical</span></td>
+  <td class="id">M365-002</td>
+  <td>
+    <div class="title">MFA enforced for privileged roles</div>
+    <div class="cat">M365 / Entra ID</div>
+    <div class="evidence">No enforced MFA policy (report-only or missing).</div>
+    <div class="affected"><strong>Affected:</strong> </div>
+    <details><summary>Rationale &amp; remediation</summary>
+      <p><strong>Why it matters:</strong> Admin accounts without enforced MFA are the highest-value target in the tenant. Report-only CA policies do not protect anything.</p>
+      <p><strong>Recommendation:</strong> Enforce MFA for all admin roles via a Conditional Access policy in &quot;enabled&quot; state (not report-only). Prefer phishing-resistant methods.</p>
+      <p class="fw">E8: Multi-factor Authentication &bull; MS: Identity Secure Score &bull; NIST: IA-2(1)</p>
+    </details>
+  </td>
+</tr>
+<tr class="status-Fail">
+  <td><span class="badge" style="background:#b00020">Fail</span></td>
+  <td><span class="badge" style="background:#e65100">High</span></td>
+  <td class="id">AD-001</td>
+  <td>
+    <div class="title">KRBTGT password rotated within 180 days</div>
+    <div class="cat">Active Directory</div>
+    <div class="evidence">KRBTGT password last set 1400 days ago.</div>
+    <div class="affected"><strong>Affected:</strong> </div>
+    <details><summary>Rationale &amp; remediation</summary>
+      <p><strong>Why it matters:</strong> A stale KRBTGT password makes Golden Ticket attacks viable and long-lived. It should be rotated (twice) on a schedule and after any DA compromise.</p>
+      <p><strong>Recommendation:</strong> Rotate the KRBTGT account password twice, allowing replication between resets. Use the Microsoft New-KrbtgtKeys.ps1 script. Schedule rotation every 180 days.</p>
+      <p class="fw">E8: Restrict Admin Privileges &bull; MS: Securing Privileged Access &bull; NIST: IA-5</p>
+    </details>
+  </td>
+</tr>
+<tr class="status-Fail">
+  <td><span class="badge" style="background:#b00020">Fail</span></td>
+  <td><span class="badge" style="background:#e65100">High</span></td>
+  <td class="id">AD-002</td>
+  <td>
+    <div class="title">Privileged group membership is minimal</div>
+    <div class="cat">Active Directory</div>
+    <div class="evidence">Domain Admins: 6, Enterprise Admins: 2.</div>
+    <div class="affected"><strong>Affected:</strong> Administrator, svc_sql, svc_backup, jdoe_adm, legacy_app, helpdesk1</div>
+    <details><summary>Rationale &amp; remediation</summary>
+      <p><strong>Why it matters:</strong> Excess members in Domain/Enterprise Admins expand the blast radius of a single credential compromise. Service and helpdesk accounts rarely need this tier.</p>
+      <p><strong>Recommendation:</strong> Remove standing membership from Domain/Enterprise Admins. Adopt a tiered admin model, use PAM/JIT elevation, and dedicated admin accounts (no service accounts).</p>
+      <p class="fw">CIS: 5.x &bull; MS: Tiered Admin Model &bull; E8: Restrict Admin Privileges</p>
+    </details>
+  </td>
+</tr>
+<tr class="status-Fail">
+  <td><span class="badge" style="background:#b00020">Fail</span></td>
+  <td><span class="badge" style="background:#e65100">High</span></td>
+  <td class="id">AD-006</td>
+  <td>
+    <div class="title">No reversible password encryption</div>
+    <div class="cat">Active Directory</div>
+    <div class="evidence">1 account(s) with reversible encryption.</div>
+    <div class="affected"><strong>Affected:</strong> legacy_radius_svc</div>
+    <details><summary>Rationale &amp; remediation</summary>
+      <p><strong>Why it matters:</strong> Reversible encryption stores passwords in a recoverable form, equivalent to cleartext for an attacker with directory access.</p>
+      <p><strong>Recommendation:</strong> Disable &quot;Store password using reversible encryption&quot; on all accounts and the domain policy, then force a password reset for affected users.</p>
+      <p class="fw">NIST: IA-5 &bull; CIS: 1.1.x</p>
+    </details>
+  </td>
+</tr>
+<tr class="status-Fail">
+  <td><span class="badge" style="background:#b00020">Fail</span></td>
+  <td><span class="badge" style="background:#e65100">High</span></td>
+  <td class="id">EXC-002</td>
+  <td>
+    <div class="title">Basic authentication is disabled</div>
+    <div class="cat">Exchange</div>
+    <div class="evidence">Basic auth enabled: True.</div>
+    <div class="affected"><strong>Affected:</strong> </div>
+    <details><summary>Rationale &amp; remediation</summary>
+      <p><strong>Why it matters:</strong> Basic auth sends reusable credentials and bypasses MFA, making it the primary vector for password spraying against mailboxes.</p>
+      <p><strong>Recommendation:</strong> Disable Basic auth via authentication policies and enforce Modern Authentication / OAuth. Block legacy protocols (POP/IMAP/EWS basic).</p>
+      <p class="fw">E8: Multi-factor Authentication &bull; MS: Modern Auth &bull; NIST: IA-2</p>
+    </details>
+  </td>
+</tr>
+<tr class="status-Fail">
+  <td><span class="badge" style="background:#b00020">Fail</span></td>
+  <td><span class="badge" style="background:#e65100">High</span></td>
+  <td class="id">EXC-003</td>
+  <td>
+    <div class="title">ECP/OWA admin surface not published externally</div>
+    <div class="cat">Exchange</div>
+    <div class="evidence">ECP externally published: True.</div>
+    <div class="affected"><strong>Affected:</strong> </div>
+    <details><summary>Rationale &amp; remediation</summary>
+      <p><strong>Why it matters:</strong> Internet-exposed ECP is the entry point for several Exchange exploit chains. The admin control panel should not be reachable from the internet.</p>
+      <p><strong>Recommendation:</strong> Restrict ECP to internal/VPN only at the load balancer or via IP restrictions; publish OWA through a reverse proxy with pre-auth.</p>
+      <p class="fw">NIST: SC-7 &bull; MS: Exchange Hardening</p>
+    </details>
+  </td>
+</tr>
+<tr class="status-Fail">
+  <td><span class="badge" style="background:#b00020">Fail</span></td>
+  <td><span class="badge" style="background:#e65100">High</span></td>
+  <td class="id">M365-003</td>
+  <td>
+    <div class="title">Global Administrator count is minimal</div>
+    <div class="cat">M365 / Entra ID</div>
+    <div class="evidence">Global Administrators: 7.</div>
+    <div class="affected"><strong>Affected:</strong> </div>
+    <details><summary>Rationale &amp; remediation</summary>
+      <p><strong>Why it matters:</strong> Microsoft recommends fewer than 5 Global Admins. Excess GAs widen the blast radius and complicate monitoring.</p>
+      <p><strong>Recommendation:</strong> Reduce Global Admins to &lt;5 break-glass/named accounts. Use least-privilege roles and Privileged Identity Management (PIM) for just-in-time elevation.</p>
+      <p class="fw">E8: Restrict Admin Privileges &bull; MS: Identity Secure Score &bull; NIST: AC-6</p>
+    </details>
+  </td>
+</tr>
+<tr class="status-Fail">
+  <td><span class="badge" style="background:#b00020">Fail</span></td>
+  <td><span class="badge" style="background:#e65100">High</span></td>
+  <td class="id">WIN-001</td>
+  <td>
+    <div class="title">SMBv1 is disabled</div>
+    <div class="cat">Windows Server</div>
+    <div class="evidence">SMB1 enabled: True.</div>
+    <div class="affected"><strong>Affected:</strong> </div>
+    <details><summary>Rationale &amp; remediation</summary>
+      <p><strong>Why it matters:</strong> SMBv1 is obsolete and exploitable (EternalBlue/WannaCry). It has no place on a modern network.</p>
+      <p><strong>Recommendation:</strong> Remove the SMB1 feature: Disable-WindowsOptionalFeature -Online -FeatureName SMB1Protocol. Confirm no legacy clients depend on it first.</p>
+      <p class="fw">CIS: 2.3.x &bull; MS: Security Baseline &bull; NIST: SC-7</p>
+    </details>
+  </td>
+</tr>
+<tr class="status-Fail">
+  <td><span class="badge" style="background:#b00020">Fail</span></td>
+  <td><span class="badge" style="background:#e65100">High</span></td>
+  <td class="id">WIN-004</td>
+  <td>
+    <div class="title">Legacy TLS/SSL protocols disabled</div>
+    <div class="cat">Windows Server</div>
+    <div class="evidence">Weak protocols enabled: TLS 1.0, TLS 1.1, SSL 3.0.</div>
+    <div class="affected"><strong>Affected:</strong> TLS 1.0, TLS 1.1, SSL 3.0</div>
+    <details><summary>Rationale &amp; remediation</summary>
+      <p><strong>Why it matters:</strong> SSL 2/3 and TLS 1.0/1.1 are deprecated and vulnerable (POODLE, BEAST). They weaken every TLS service on the host.</p>
+      <p><strong>Recommendation:</strong> Disable SSL 2.0/3.0 and TLS 1.0/1.1 server-side in the SCHANNEL registry (Enabled=0, DisabledByDefault=1). Enforce TLS 1.2+.</p>
+      <p class="fw">CIS: 18.x &bull; E8: Patch Applications &bull; NIST: SC-8</p>
+    </details>
+  </td>
+</tr>
+<tr class="status-Fail">
+  <td><span class="badge" style="background:#b00020">Fail</span></td>
+  <td><span class="badge" style="background:#e65100">High</span></td>
+  <td class="id">WIN-005</td>
+  <td>
+    <div class="title">Host patched within 30 days</div>
+    <div class="cat">Windows Server</div>
+    <div class="evidence">Last hotfix installed 210 days ago.</div>
+    <div class="affected"><strong>Affected:</strong> </div>
+    <details><summary>Rationale &amp; remediation</summary>
+      <p><strong>Why it matters:</strong> Unpatched servers are the most common initial-access vector. Essential 8 expects OS patching within 30 days (48h for critical).</p>
+      <p><strong>Recommendation:</strong> Apply the latest cumulative update. Establish a monthly patch cycle with an expedited path for critical/exploited CVEs.</p>
+      <p class="fw">CIS: 18.x &bull; E8: Patch Operating Systems &bull; NIST: SI-2</p>
+    </details>
+  </td>
+</tr>
+<tr class="status-Fail">
+  <td><span class="badge" style="background:#b00020">Fail</span></td>
+  <td><span class="badge" style="background:#f9a825">Medium</span></td>
+  <td class="id">AD-004</td>
+  <td>
+    <div class="title">MachineAccountQuota is set to 0</div>
+    <div class="cat">Active Directory</div>
+    <div class="evidence">ms-DS-MachineAccountQuota = 10.</div>
+    <div class="affected"><strong>Affected:</strong> </div>
+    <details><summary>Rationale &amp; remediation</summary>
+      <p><strong>Why it matters:</strong> The default quota of 10 lets any authenticated user create computer accounts, enabling attacks such as RBCD and noPac/sAMAccountName spoofing.</p>
+      <p><strong>Recommendation:</strong> Set ms-DS-MachineAccountQuota to 0 and delegate computer-account creation to a dedicated group.</p>
+      <p class="fw">NIST: AC-3 &bull; MS: Hardening AD</p>
+    </details>
+  </td>
+</tr>
+<tr class="status-Fail">
+  <td><span class="badge" style="background:#b00020">Fail</span></td>
+  <td><span class="badge" style="background:#f9a825">Medium</span></td>
+  <td class="id">AD-005</td>
+  <td>
+    <div class="title">Domain password policy meets baseline</div>
+    <div class="cat">Active Directory</div>
+    <div class="evidence">MinLength=7, Complexity=True, Lockout=0.</div>
+    <div class="affected"><strong>Affected:</strong> </div>
+    <details><summary>Rationale &amp; remediation</summary>
+      <p><strong>Why it matters:</strong> Short or non-complex passwords are trivially brute-forced or sprayed. A minimum length of 14 with lockout reduces guessing.</p>
+      <p><strong>Recommendation:</strong> Set minimum password length to 14+, enable complexity, and configure an account lockout threshold (e.g. 10 attempts). Prefer passphrases and MFA.</p>
+      <p class="fw">CIS: 1.1.x &bull; E8: Multi-factor / Passphrases &bull; NIST: IA-5</p>
+    </details>
+  </td>
+</tr>
+<tr class="status-Fail">
+  <td><span class="badge" style="background:#b00020">Fail</span></td>
+  <td><span class="badge" style="background:#f9a825">Medium</span></td>
+  <td class="id">AD-007</td>
+  <td>
+    <div class="title">LAPS deployed for local admin passwords</div>
+    <div class="cat">Active Directory</div>
+    <div class="evidence">LAPS schema/deployment present: False.</div>
+    <div class="affected"><strong>Affected:</strong> </div>
+    <details><summary>Rationale &amp; remediation</summary>
+      <p><strong>Why it matters:</strong> Without LAPS, local Administrator passwords are often shared/identical across machines, enabling lateral movement via pass-the-hash.</p>
+      <p><strong>Recommendation:</strong> Deploy Windows LAPS (built into modern Windows) to randomise and rotate local admin passwords, stored encrypted in AD.</p>
+      <p class="fw">E8: Restrict Admin Privileges &bull; MS: LAPS &bull; NIST: AC-6</p>
+    </details>
+  </td>
+</tr>
+<tr class="status-Fail">
+  <td><span class="badge" style="background:#b00020">Fail</span></td>
+  <td><span class="badge" style="background:#f9a825">Medium</span></td>
+  <td class="id">M365-004</td>
+  <td>
+    <div class="title">A baseline of Conditional Access is configured</div>
+    <div class="cat">M365 / Entra ID</div>
+    <div class="evidence">Enabled CA policies present: False; Security Defaults: False.</div>
+    <div class="affected"><strong>Affected:</strong> </div>
+    <details><summary>Rationale &amp; remediation</summary>
+      <p><strong>Why it matters:</strong> Without Conditional Access (or Security Defaults), access is governed only by passwords - no device, location, or risk controls.</p>
+      <p><strong>Recommendation:</strong> Implement baseline CA policies: require MFA, block legacy auth, require compliant/hybrid-joined devices for sensitive apps.</p>
+      <p class="fw">E8: Multi-factor Authentication &bull; MS: Zero Trust &bull; NIST: AC-3</p>
+    </details>
+  </td>
+</tr>
+<tr class="status-Fail">
+  <td><span class="badge" style="background:#b00020">Fail</span></td>
+  <td><span class="badge" style="background:#f9a825">Medium</span></td>
+  <td class="id">WIN-002</td>
+  <td>
+    <div class="title">RDP requires Network Level Authentication</div>
+    <div class="cat">Windows Server</div>
+    <div class="evidence">RDP NLA enabled: False.</div>
+    <div class="affected"><strong>Affected:</strong> </div>
+    <details><summary>Rationale &amp; remediation</summary>
+      <p><strong>Why it matters:</strong> NLA forces authentication before a session is established, mitigating pre-auth RDP exploits and resource exhaustion.</p>
+      <p><strong>Recommendation:</strong> Enable &quot;Require user authentication for remote connections by using NLA&quot; via GPO or set UserAuthentication=1 on the RDP-Tcp listener.</p>
+      <p class="fw">CIS: 18.x &bull; MS: Security Baseline &bull; NIST: IA-2</p>
+    </details>
+  </td>
+</tr>
+<tr class="status-Fail">
+  <td><span class="badge" style="background:#b00020">Fail</span></td>
+  <td><span class="badge" style="background:#f9a825">Medium</span></td>
+  <td class="id">WIN-006</td>
+  <td>
+    <div class="title">Local Administrators group is constrained</div>
+    <div class="cat">Windows Server</div>
+    <div class="evidence">4 local administrator principals.</div>
+    <div class="affected"><strong>Affected:</strong> Administrator, CORP\Domain Admins, CORP\helpdesk, localadmin2</div>
+    <details><summary>Rationale &amp; remediation</summary>
+      <p><strong>Why it matters:</strong> Broad local admin membership enables lateral movement and undermines tiering. Only required, audited principals should be local admins.</p>
+      <p><strong>Recommendation:</strong> Remove ad-hoc users from local Administrators; manage membership centrally via GPO/Restricted Groups and use LAPS for the built-in account.</p>
+      <p class="fw">CIS: 2.x &bull; E8: Restrict Admin Privileges &bull; NIST: AC-6</p>
+    </details>
+  </td>
+</tr>
+<tr class="status-Fail">
+  <td><span class="badge" style="background:#b00020">Fail</span></td>
+  <td><span class="badge" style="background:#1976d2">Low</span></td>
+  <td class="id">AD-008</td>
+  <td>
+    <div class="title">Stale enabled accounts are disabled</div>
+    <div class="cat">Active Directory</div>
+    <div class="evidence">5 enabled account(s) inactive &gt;90 days.</div>
+    <div class="affected"><strong>Affected:</strong> tmp_contractor, old_svc, jsmith_old, vendor_x, batch_2019</div>
+    <details><summary>Rationale &amp; remediation</summary>
+      <p><strong>Why it matters:</strong> Enabled accounts unused for 90+ days are prime targets for password spraying and go unnoticed if compromised.</p>
+      <p><strong>Recommendation:</strong> Disable accounts inactive for 90+ days after verification, then remove after a retention window. Automate with a scheduled review.</p>
+      <p class="fw">NIST: AC-2 &bull; CIS: 5.x</p>
+    </details>
+  </td>
+</tr>
+<tr class="status-Pass">
+  <td><span class="badge" style="background:#2e7d32">Pass</span></td>
+  <td><span class="badge" style="background:#b00020">Critical</span></td>
+  <td class="id">EXC-001</td>
+  <td>
+    <div class="title">Exchange servers on a supported, patched build</div>
+    <div class="cat">Exchange</div>
+    <div class="evidence">All servers on a recent build.</div>
+    <div class="affected"><strong>Affected:</strong> </div>
+    <details><summary>Rationale &amp; remediation</summary>
+      <p><strong>Why it matters:</strong> Exchange is a top target (ProxyLogon/ProxyShell). Out-of-support or unpatched builds are routinely exploited for pre-auth RCE.</p>
+      <p><strong>Recommendation:</strong> Run the Exchange Health Checker, apply the latest CU + Security Update, and decommission unsupported versions. Subscribe to MSRC advisories.</p>
+      <p class="fw">E8: Patch Applications &bull; MS: Exchange Security Updates &bull; NIST: SI-2</p>
+    </details>
+  </td>
+</tr>
+<tr class="status-Pass">
+  <td><span class="badge" style="background:#2e7d32">Pass</span></td>
+  <td><span class="badge" style="background:#f9a825">Medium</span></td>
+  <td class="id">WIN-003</td>
+  <td>
+    <div class="title">Windows Firewall enabled on all profiles</div>
+    <div class="cat">Windows Server</div>
+    <div class="evidence">All firewall profiles enabled: True.</div>
+    <div class="affected"><strong>Affected:</strong> </div>
+    <details><summary>Rationale &amp; remediation</summary>
+      <p><strong>Why it matters:</strong> A host firewall limits lateral movement and exposure of management ports even inside the perimeter.</p>
+      <p><strong>Recommendation:</strong> Enable the firewall for Domain, Private and Public profiles via GPO; allow only required inbound services.</p>
+      <p class="fw">NIST: SC-7 &bull; CIS: 9.x</p>
+    </details>
+  </td>
+</tr>
+  </tbody>
+ </table>
+</div>
+<footer>Generated by SecurityAssessment (PowerShell). Findings map to CIS, Microsoft Security Baselines, NIST 800-53 and ASD Essential 8. Read-only assessment - verify before remediating.</footer>
+</body></html>
